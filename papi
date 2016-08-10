@@ -1,0 +1,36 @@
+#!/bin/bash
+tmp=/tmp/$0.$$.tmp
+ppmaster=<puppetMaster>
+port=4433
+token=<aBigToken>
+
+# Clenaup tmp
+function F_Exit {
+rm -f $tmp
+}
+trap F_Exit EXIT
+
+# Handle a GET or POST api call
+case $1 in
+GET)
+    curl -s -i -o $tmp -k -X GET \
+      "https://"$ppmaster":"$port$2 \
+      -H "X-Authentication:$token"
+    ;;
+POST)
+     curl -s -i -o $tmp -k -X POST \
+      -d @$3 \
+      "https://"$ppmaster":"$port$2 \
+      -H "X-Authentication:$token" \
+      -H "Content-Type: application/json"
+    ;;
+*)
+    echo "I don't know what to do"
+    exit 1
+    ;;
+esac
+
+# Print the HTTP Response
+echo
+[[ -s $tmp ]] && cat $tmp
+echo

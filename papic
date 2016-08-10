@@ -1,0 +1,36 @@
+#!/bin/bash
+certname=`hostname`
+tmp=/tmp/$0.$certname.$$.tmp
+pconfdir=/etc/puppetlabs/puppet
+ppmaster=<puppetMaster>
+
+function F_Exit {
+rm -f $tmp
+}
+trap F_Exit EXIT
+
+case $1 in
+GET)  curl -s -o $tmp -i -X GET \
+        --cert $pconfdir"/ssl/certs/"$certname".pem" \
+        --key $pconfdir"/ssl/private_keys/"$certname".pem" \
+        --cacert $pconfdir"/ssl/certs/ca.pem" \
+        -H 'Accept: pson' \
+        "https://"$ppmaster":8140"$2
+      ;;
+PUT)  curl -s -o $tmp -i -X PUT -d @$3 \
+        --cert $pconfdir"/ssl/certs/"$certname".pem" \
+        --key $pconfdir"/ssl/private_keys/"$certname".pem" \
+        --cacert $pconfdir"/ssl/certs/ca.pem" \
+        -H 'Accept: pson' \
+        -H 'Content-Type: text/pson' \
+        "https://"$ppmaster":8140"$2
+      ;;
+*)
+      echo "Don't understand"
+      exit 1
+      ;;
+esac
+
+echo
+[[ -s $tmp ]] && cat $tmp
+echo
